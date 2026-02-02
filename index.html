@@ -65,7 +65,7 @@
     color: white;
     position: relative;
     /* Smooth movement */
-    transition: left 650ms cubic-bezier(.2,.8,.2,1), top 650ms cubic-bezier(.2,.8,.2,1);
+    transition: left 900ms cubic-bezier(.2,.8,.2,1), top 900ms cubic-bezier(.2,.8,.2,1);
     will-change: left, top;
   }
 
@@ -174,9 +174,9 @@
   const closeBtn = document.getElementById("closeBtn");
 
   // --- Smooth/Slower "No" ---
-  const MOVE_DURATION_MS = 650;    // matches CSS transition
-  const COOLDOWN_MS = 450;         // prevents rapid spam
-  const CLOSE_RADIUS = 110;        // how close mouse must be
+  const MOVE_DURATION_MS = 900;    // matches CSS transition
+  const COOLDOWN_MS = 650;         // prevents rapid spam
+  const CLOSE_RADIUS = 60;        // how close mouse must be
   let lastMoveTime = 0;
 
   function clamp(n, min, max) {
@@ -229,7 +229,7 @@
   confettiLayer.className = "confetti-layer";
   document.body.appendChild(confettiLayer);
 
-  function burstHearts(count = 34) {
+  function burstHearts(count = 70) {
     const hearts = ["💖", "💘", "💗", "💓", "💕", "❤️"];
     for (let i = 0; i < count; i++) {
       const el = document.createElement("div");
@@ -274,5 +274,6 @@
 
 </body>
 </html>
+
 
 
