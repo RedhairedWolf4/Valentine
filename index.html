@@ -5,159 +5,166 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Valentine?</title>
   <style>
-  body {
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    background: radial-gradient(circle at top, #ffe5ec, #fff);
-    overflow: hidden;
-  }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, #ffe5ec, #fff);
+      overflow: hidden;
+    }
 
-  .card {
-    width: min(520px, 92vw);
-    padding: 28px 26px;
-    border-radius: 18px;
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(8px);
-    box-shadow: 0 18px 50px rgba(0,0,0,0.12);
-    text-align: center;
-    position: relative;
-    z-index: 1;
-  }
+    .card {
+      width: min(520px, 92vw);
+      padding: 28px 26px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.12);
+      text-align: center;
+      position: relative;
+    }
 
-  h1 {
-    margin: 0 0 18px;
-    font-size: 28px;
-    letter-spacing: 0.2px;
-    color: #b1004b;
-  }
+    h1 {
+      margin: 0 0 18px;
+      font-size: 28px;
+      letter-spacing: 0.2px;
+      color: #b1004b;
+    }
 
-  .buttons {
-    display: flex;
-    justify-content: center;
-    gap: 14px;
-    margin-top: 10px;
-    flex-wrap: wrap;
-  }
+    /* BOUNDED play area for the buttons */
+    .buttonsArea {
+      position: relative;
+      width: 100%;
+      height: 92px; /* gives room for NO to roam */
+      margin-top: 8px;
+    }
 
-  button {
-    border: 0;
-    padding: 12px 20px;
-    border-radius: 999px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: transform 0.08s ease;
-    user-select: none;
-  }
+    /* Anchor YES nicely near the bottom center */
+    #yesBtn {
+      position: absolute;
+      left: 50%;
+      bottom: 8px;
+      transform: translateX(-70px) scale(1); /* slightly left so YES+NO feel centered */
+      border: 0;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+      background: #ff2d6d;
+      color: white;
+      box-shadow: 0 10px 20px rgba(255,45,109,0.25);
+      transition: transform 520ms cubic-bezier(.2,.8,.2,1);
+      will-change: transform;
+    }
+    #yesBtn:active { transform: translateX(-70px) scale(0.98); }
 
-  button:active { transform: scale(0.98); }
+    /* NO is absolutely positioned inside the area (so it never leaves the box) */
+    #noBtn {
+      position: absolute;
+      left: 50%;
+      bottom: 8px;
+      transform: translateX(20px); /* start to the right of YES */
+      border: 0;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+      background: #2b2b2b;
+      color: white;
 
-  #yesBtn {
-    background: #ff2d6d;
-    color: white;
-    box-shadow: 0 10px 20px rgba(255,45,109,0.25);
-  }
+      /* buttery movement */
+      transition: transform 1300ms cubic-bezier(.16, 1, .3, 1);
+      will-change: transform;
+    }
+    #noBtn:active { transform: translateX(20px) scale(0.98); }
 
-  #noBtn {
-    background: #2b2b2b;
-    color: white;
-    position: relative;
-    /* Smooth movement */
-    transition: left 900ms cubic-bezier(.2,.8,.2,1), top 900ms cubic-bezier(.2,.8,.2,1);
-    will-change: left, top;
-  }
+    /* Overlay when YES is clicked */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 9999;
+    }
 
-  .hint {
-    margin-top: 14px;
-    font-size: 13px;
-    color: #666;
-  }
+    .overlayContent {
+      width: min(520px, 92vw);
+      background: white;
+      border-radius: 18px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+    }
 
-  /* Overlay when YES is clicked */
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.55);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    z-index: 9999;
-  }
+    .overlayContent h2 {
+      margin: 8px 0 12px;
+      color: #b1004b;
+      font-size: 24px;
+    }
 
-  .overlayContent {
-    width: min(520px, 92vw);
-    background: white;
-    border-radius: 18px;
-    padding: 18px;
-    text-align: center;
-    box-shadow: 0 18px 50px rgba(0,0,0,0.25);
-  }
+    .gif {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 14px;
+      display: block;
+      margin: 0 auto 14px;
+    }
 
-  .overlayContent h2 {
-    margin: 8px 0 12px;
-    color: #b1004b;
-    font-size: 24px;
-  }
+    .closeBtn {
+      border: 0;
+      background: #ff2d6d;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
 
-  .gif {
-    width: 100%;
-    max-width: 420px;
-    border-radius: 14px;
-    display: block;
-    margin: 0 auto 14px;
-  }
+    /* Heart confetti */
+    .confetti-layer {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 9998; /* under overlay */
+    }
 
-  .closeBtn {
-    background: #ff2d6d;
-    color: white;
-    padding: 10px 16px;
-    border-radius: 999px;
-  }
+    .heart {
+      position: absolute;
+      opacity: 0.95;
+      animation: fall 2400ms ease-in forwards;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.15));
+      will-change: transform, opacity;
+    }
 
-  /* Heart confetti layer */
-  .confetti-layer {
-    pointer-events: none;
-    position: fixed;
-    inset: 0;
-    overflow: hidden;
-    z-index: 9998; /* just under the overlay */
-  }
-
-  .heart {
-    position: absolute;
-    font-size: 18px;
-    opacity: 0.95;
-    transform: translateY(0) rotate(0deg);
-    animation: fall 1400ms ease-in forwards;
-    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.15));
-  }
-
-  @keyframes fall {
-    0%   { transform: translateY(-20px) rotate(0deg); opacity: 0; }
-    10%  { opacity: 1; }
-    100% { transform: translateY(110vh) rotate(260deg); opacity: 0; }
-  }
-</style>
+    @keyframes fall {
+      0%   { transform: translateY(-25px) rotate(0deg) scale(0.9); opacity: 0; }
+      12%  { opacity: 1; }
+      100% { transform: translateY(110vh) rotate(280deg) scale(1.1); opacity: 0; }
+    }
+  </style>
 </head>
+
 <body>
   <div class="card" id="card">
-    <h1>Aiza, would you be my valentine? 💘</h1>
+    <h1>Would you be my valentine? 💘</h1>
 
-    <div class="buttons">
+    <div class="buttonsArea" id="buttonsArea">
       <button id="yesBtn" aria-label="Yes">Yes</button>
       <button id="noBtn" aria-label="No">No</button>
     </div>
-
-    <div class="hint">(Try hovering over “No” 😄)</div>
   </div>
 
   <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Celebration">
     <div class="overlayContent">
       <h2>YAY!! 🎉💖</h2>
-      <!-- You can swap this GIF URL to any celebratory gif you like -->
+      <!-- Swap this GIF to anything you like -->
       <img
         class="gif"
         alt="Celebration"
@@ -168,112 +175,176 @@
   </div>
 
   <script>
-  const noBtn = document.getElementById("noBtn");
-  const yesBtn = document.getElementById("yesBtn");
-  const overlay = document.getElementById("overlay");
-  const closeBtn = document.getElementById("closeBtn");
+    const buttonsArea = document.getElementById("buttonsArea");
+    const noBtn = document.getElementById("noBtn");
+    const yesBtn = document.getElementById("yesBtn");
+    const overlay = document.getElementById("overlay");
+    const closeBtn = document.getElementById("closeBtn");
 
-  // --- Smooth/Slower "No" ---
-  const MOVE_DURATION_MS = 900;    // matches CSS transition
-  const COOLDOWN_MS = 650;         // prevents rapid spam
-  const CLOSE_RADIUS = 60;        // how close mouse must be
-  let lastMoveTime = 0;
+    // Confetti layer
+    const confettiLayer = document.createElement("div");
+    confettiLayer.className = "confetti-layer";
+    document.body.appendChild(confettiLayer);
 
-  function clamp(n, min, max) {
-    return Math.max(min, Math.min(max, n));
-  }
+    // ---------------------------
+    // BUTTERY "NO" (contained)
+    // ---------------------------
+    // We store NO position as translate(px, px) inside buttonsArea.
+    // Start values match CSS (translateX(20px), translateY(0px)).
+    let noPos = { x: 20, y: 0 };
 
-  function canMove() {
-    return Date.now() - lastMoveTime > COOLDOWN_MS;
-  }
+    // Movement tuning knobs
+    const COOLDOWN_MS = 850;          // slower response cadence
+    const STEP_PX = 120;              // how far it tries to flee each hover
+    const JITTER_PX = 40;             // adds organic variation
+    const PADDING = 8;                // keep inside the box edges
+    const EDGE_SOFTNESS = 0.65;       // 0..1 (lower = more center-seeking)
+    let lastMove = 0;
 
-  function moveNoButton() {
-    if (!canMove()) return;
-    lastMoveTime = Date.now();
+    // YES growth on each NO-hover
+    let hoverCount = 0;
+    const YES_GROWTH_PER = 0.085;     // each dodge increases scale
+    const YES_MAX_SCALE = 2.35;
 
-    const padding = 14;
-    const btnRect = noBtn.getBoundingClientRect();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    const maxX = vw - btnRect.width - padding;
-    const maxY = vh - btnRect.height - padding;
-
-    const x = Math.random() * (maxX - padding) + padding;
-    const y = Math.random() * (maxY - padding) + padding;
-
-    // Use fixed so it can animate anywhere on screen
-    noBtn.style.position = "fixed";
-    noBtn.style.left = clamp(x, padding, maxX) + "px";
-    noBtn.style.top  = clamp(y, padding, maxY) + "px";
-  }
-
-  // Move on hover (smooth)
-  noBtn.addEventListener("mouseenter", moveNoButton);
-
-  // Optional: move when cursor gets close, but not too aggressively
-  document.addEventListener("mousemove", (e) => {
-    const rect = noBtn.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-
-    const dx = e.clientX - cx;
-    const dy = e.clientY - cy;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    if (distance < CLOSE_RADIUS) moveNoButton();
-  });
-
-  // --- Heart confetti on YES ---
-  const confettiLayer = document.createElement("div");
-  confettiLayer.className = "confetti-layer";
-  document.body.appendChild(confettiLayer);
-
-  function burstHearts(count = 70) {
-    const hearts = ["💖", "💘", "💗", "💓", "💕", "❤️"];
-    for (let i = 0; i < count; i++) {
-      const el = document.createElement("div");
-      el.className = "heart";
-      el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
-
-      // random horizontal start, slight random size
-      const x = Math.random() * 100; // vw %
-      const size = 14 + Math.random() * 18;
-
-      el.style.left = x + "vw";
-      el.style.top = (-10 - Math.random() * 20) + "vh";
-      el.style.fontSize = size + "px";
-      el.style.animationDuration = (1200 + Math.random() * 900) + "ms";
-      el.style.animationDelay = (Math.random() * 120) + "ms";
-
-      confettiLayer.appendChild(el);
-
-      // remove after animation ends
-      setTimeout(() => el.remove(), 2400);
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
     }
-  }
 
-  yesBtn.addEventListener("click", () => {
-    burstHearts(42);
-    overlay.style.display = "flex";
-  });
+    function setNoTransform(x, y) {
+      noPos.x = x;
+      noPos.y = y;
+      noBtn.style.transform = `translate(${x}px, ${y}px)`;
+    }
 
-  function closeOverlay() {
-    overlay.style.display = "none";
-  }
+    function getBounds() {
+      const areaRect = buttonsArea.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
 
-  closeBtn.addEventListener("click", closeOverlay);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeOverlay();
-  });
+      // Because we use translate, we bound translate coords relative to NO's "anchor point"
+      // which is left:50% bottom:8px. We'll bound movement so the button stays within area.
+      const maxX = (areaRect.width / 2) - (btnRect.width) - PADDING;  // rightmost translate
+      const minX = -(areaRect.width / 2) + PADDING;                    // leftmost translate
+      const minY = -(areaRect.height - btnRect.height - PADDING);      // up (negative y)
+      const maxY = 0;                                                  // down to baseline
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeOverlay();
-  });
-</script>
+      return { minX, maxX, minY, maxY };
+    }
 
+    function moveNoButtery(event) {
+      const now = Date.now();
+      if (now - lastMove < COOLDOWN_MS) return;
+      lastMove = now;
+
+      // YES grows each time NO dodges
+      hoverCount += 1;
+      const yesScale = clamp(1 + hoverCount * YES_GROWTH_PER, 1, YES_MAX_SCALE);
+      // Keep YES centered with its existing translateX
+      yesBtn.style.transform = `translateX(-70px) scale(${yesScale})`;
+
+      const bounds = getBounds();
+
+      // Cursor position relative to buttonsArea center/baseline
+      const areaRect = buttonsArea.getBoundingClientRect();
+      const centerX = areaRect.left + areaRect.width / 2;
+
+      // Baseline Y is near the bottom where buttons sit
+      const baselineY = areaRect.bottom - 8; // matches bottom: 8px
+
+      const mouseX = event.clientX;
+      const mouseY = event.clientY;
+
+      // Button center in viewport (current)
+      const btnRect = noBtn.getBoundingClientRect();
+      const btnCenterX = btnRect.left + btnRect.width / 2;
+      const btnCenterY = btnRect.top + btnRect.height / 2;
+
+      // Direction away from cursor (vector from cursor -> button)
+      let vx = btnCenterX - mouseX;
+      let vy = btnCenterY - mouseY;
+
+      // If cursor is exactly at center (rare), pick a direction
+      const len = Math.hypot(vx, vy) || 1;
+      vx /= len;
+      vy /= len;
+
+      // Target shift: move away + add some jitter
+      const jitterX = (Math.random() * 2 - 1) * JITTER_PX;
+      const jitterY = (Math.random() * 2 - 1) * (JITTER_PX * 0.75);
+
+      // Prefer staying within the "top half" for a fun dodge feel
+      const upwardBias = -Math.abs(Math.random() * 45);
+
+      // Convert direction into translate-space:
+      // x: away direction + jitter
+      // y: slight upward movement so it doesn't feel stuck on baseline
+      let targetX = noPos.x + vx * STEP_PX + jitterX;
+      let targetY = noPos.y + vy * (STEP_PX * 0.55) + jitterY + upwardBias;
+
+      // Soft push toward center to avoid hugging edges
+      const edgePullX = (targetX > 0 ? -1 : 1) * (1 - EDGE_SOFTNESS) * 18;
+      targetX += edgePullX;
+
+      // Clamp to stay inside the buttonsArea
+      targetX = clamp(targetX, bounds.minX, bounds.maxX);
+      targetY = clamp(targetY, bounds.minY, bounds.maxY);
+
+      setNoTransform(targetX, targetY);
+    }
+
+    // Smooth + slow: only trigger on hover. (No proximity spam = less clunk)
+    noBtn.addEventListener("mouseenter", moveNoButtery);
+
+    // If the window changes, pull NO back to a safe position
+    window.addEventListener("resize", () => {
+      hoverCount = 0;
+      yesBtn.style.transform = "translateX(-70px) scale(1)";
+      setNoTransform(20, 0);
+    });
+
+    // ---------------------------
+    // HEART CONFETTI on YES
+    // ---------------------------
+    function burstHearts(count = 80) {
+      const hearts = ["💖", "💘", "💗", "💓", "💕", "❤️"];
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement("div");
+        el.className = "heart";
+        el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+
+        const x = Math.random() * 100;           // vw
+        const size = 14 + Math.random() * 22;    // px
+        const dur = 1900 + Math.random() * 1400; // ms
+        const delay = Math.random() * 140;       // ms
+
+        el.style.left = x + "vw";
+        el.style.top = (-10 - Math.random() * 20) + "vh";
+        el.style.fontSize = size + "px";
+        el.style.animationDuration = dur + "ms";
+        el.style.animationDelay = delay + "ms";
+
+        confettiLayer.appendChild(el);
+        setTimeout(() => el.remove(), dur + delay + 600);
+      }
+    }
+
+    // YES shows confetti + overlay gif
+    yesBtn.addEventListener("click", () => {
+      burstHearts(90);
+      overlay.style.display = "flex";
+    });
+
+    function closeOverlay() {
+      overlay.style.display = "none";
+    }
+
+    closeBtn.addEventListener("click", closeOverlay);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeOverlay();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeOverlay();
+    });
+  </script>
 </body>
 </html>
-
-
-
