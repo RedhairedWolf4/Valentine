@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valentine?</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, #ffe5ec, #fff);
+      overflow: hidden;
+    }
+
+    .card {
+      width: min(520px, 92vw);
+      padding: 28px 26px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.12);
+      text-align: center;
+      position: relative;
+    }
+
+    h1 {
+      margin: 0 0 18px;
+      font-size: 28px;
+      letter-spacing: 0.2px;
+      color: #b1004b;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.08s ease;
+      user-select: none;
+    }
+
+    button:active { transform: scale(0.98); }
+
+    #yesBtn {
+      background: #ff2d6d;
+      color: white;
+      box-shadow: 0 10px 20px rgba(255,45,109,0.25);
+    }
+
+    #noBtn {
+      background: #2b2b2b;
+      color: white;
+      position: relative; /* starts in normal flow, becomes fixed on first dodge */
+    }
+
+    /* Overlay when YES is clicked */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 9999;
+    }
+
+    .overlayContent {
+      width: min(520px, 92vw);
+      background: white;
+      border-radius: 18px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+    }
+
+    .overlayContent h2 {
+      margin: 8px 0 12px;
+      color: #b1004b;
+      font-size: 24px;
+    }
+
+    .gif {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 14px;
+      display: block;
+      margin: 0 auto 14px;
+    }
+
+    .closeBtn {
+      background: #ff2d6d;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 999px;
+    }
+
+    .hint {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <h1>Would you be my valentine? 💘</h1>
+
+    <div class="buttons">
+      <button id="yesBtn" aria-label="Yes">Yes</button>
+      <button id="noBtn" aria-label="No">No</button>
+    </div>
+
+    <div class="hint">(Try hovering over “No” 😄)</div>
+  </div>
+
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Celebration">
+    <div class="overlayContent">
+      <h2>YAY!! 🎉💖</h2>
+      <!-- You can swap this GIF URL to any celebratory gif you like -->
+      <img
+        class="gif"
+        alt="Celebration"
+        src="https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif"
+      />
+      <button class="closeBtn" id="closeBtn">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const noBtn = document.getElementById("noBtn");
+    const yesBtn = document.getElementById("yesBtn");
+    const overlay = document.getElementById("overlay");
+    const closeBtn = document.getElementById("closeBtn");
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function moveNoButton() {
+      // Make it "escape" to a random spot within the viewport
+      // Switch to fixed positioning so it can move anywhere.
+      const padding = 12;
+      const btnRect = noBtn.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      const maxX = vw - btnRect.width - padding;
+      const maxY = vh - btnRect.height - padding;
+
+      const x = Math.random() * (maxX - padding) + padding;
+      const y = Math.random() * (maxY - padding) + padding;
+
+      noBtn.style.position = "fixed";
+      noBtn.style.left = clamp(x, padding, maxX) + "px";
+      noBtn.style.top = clamp(y, padding, maxY) + "px";
+    }
+
+    // Dodge on hover AND when the cursor gets close (feels funnier)
+    noBtn.addEventListener("mouseenter", moveNoButton);
+
+    document.addEventListener("mousemove", (e) => {
+      const rect = noBtn.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // If the cursor gets within 90px, dodge
+      if (distance < 90) moveNoButton();
+    });
+
+    yesBtn.addEventListener("click", () => {
+      overlay.style.display = "flex";
+    });
+
+    function closeOverlay() {
+      overlay.style.display = "none";
+    }
+
+    closeBtn.addEventListener("click", closeOverlay);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeOverlay();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeOverlay();
+    });
+  </script>
+</body>
+</html>
