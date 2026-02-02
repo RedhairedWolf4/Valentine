@@ -37,16 +37,16 @@
     .buttonsArea {
       position: relative;
       width: 100%;
-      height: 92px; /* gives room for NO to roam */
+      height: 110px; /* extra room so NO can dodge without feeling cramped */
       margin-top: 8px;
     }
 
-    /* Anchor YES nicely near the bottom center */
+    /* YES button (grows more each NO attempt) */
     #yesBtn {
       position: absolute;
       left: 50%;
-      bottom: 8px;
-      transform: translateX(-70px) scale(1); /* slightly left so YES+NO feel centered */
+      bottom: 10px;
+      transform: translateX(-70px) scale(1); /* keep centered with NO */
       border: 0;
       padding: 12px 20px;
       border-radius: 999px;
@@ -65,8 +65,8 @@
     #noBtn {
       position: absolute;
       left: 50%;
-      bottom: 8px;
-      transform: translateX(20px); /* start to the right of YES */
+      bottom: 10px;
+      transform: translate(20px, 0px);
       border: 0;
       padding: 12px 20px;
       border-radius: 999px;
@@ -77,10 +77,9 @@
       color: white;
 
       /* buttery movement */
-      transition: transform 1300ms cubic-bezier(.16, 1, .3, 1);
+      transition: transform 1600ms cubic-bezier(.16, 1, .3, 1);
       will-change: transform;
     }
-    #noBtn:active { transform: translateX(20px) scale(0.98); }
 
     /* Overlay when YES is clicked */
     .overlay {
@@ -138,7 +137,7 @@
     .heart {
       position: absolute;
       opacity: 0.95;
-      animation: fall 2400ms ease-in forwards;
+      animation: fall 2600ms ease-in forwards;
       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.15));
       will-change: transform, opacity;
     }
@@ -164,7 +163,6 @@
   <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Celebration">
     <div class="overlayContent">
       <h2>YAY!! 🎉💖</h2>
-      <!-- Swap this GIF to anything you like -->
       <img
         class="gif"
         alt="Celebration"
@@ -187,24 +185,27 @@
     document.body.appendChild(confettiLayer);
 
     // ---------------------------
-    // BUTTERY "NO" (contained)
+    // BUTTERY "NO" (contained) + NEVER LET CURSOR TOUCH IT
     // ---------------------------
-    // We store NO position as translate(px, px) inside buttonsArea.
-    // Start values match CSS (translateX(20px), translateY(0px)).
-    let noPos = { x: 20, y: 0 };
+    let noPos = { x: 20, y: 0 }; // translate(x,y) in px (relative to its anchored spot)
 
-    // Movement tuning knobs
-    const COOLDOWN_MS = 850;          // slower response cadence
-    const STEP_PX = 120;              // how far it tries to flee each hover
-    const JITTER_PX = 40;             // adds organic variation
-    const PADDING = 8;                // keep inside the box edges
-    const EDGE_SOFTNESS = 0.65;       // 0..1 (lower = more center-seeking)
-    let lastMove = 0;
+    // Tuning knobs (smooth + "can't touch")
+    const COOLDOWN_MS = 120;        // can update often to keep it untouchable
+    const SAFE_RADIUS = 120;        // how close the cursor can get before NO flees
+    const STEP_PX = 85;             // flee strength per update (kept moderate for buttery glide)
+    const JITTER_PX = 26;           // organic movement
+    const PADDING = 8;              // keep inside area edges
 
-    // YES growth on each NO-hover
+    // YES growth per "attempt"
     let hoverCount = 0;
-    const YES_GROWTH_PER = 0.085;     // each dodge increases scale
+    const YES_GROWTH_PER = 0.055;
     const YES_MAX_SCALE = 2.35;
+
+    // Slight damping so it glides rather than snaps
+    const DAMPING = 0.22;
+
+    let lastMove = 0;
+    let vx = 0, vy = 0;            // velocity for buttery motion
 
     function clamp(n, min, max) {
       return Math.max(min, Math.min(max, n));
@@ -220,101 +221,101 @@
       const areaRect = buttonsArea.getBoundingClientRect();
       const btnRect = noBtn.getBoundingClientRect();
 
-      // Because we use translate, we bound translate coords relative to NO's "anchor point"
-      // which is left:50% bottom:8px. We'll bound movement so the button stays within area.
-      const maxX = (areaRect.width / 2) - (btnRect.width) - PADDING;  // rightmost translate
-      const minX = -(areaRect.width / 2) + PADDING;                    // leftmost translate
-      const minY = -(areaRect.height - btnRect.height - PADDING);      // up (negative y)
-      const maxY = 0;                                                  // down to baseline
+      // Translate bounds relative to anchor at (centerX, baselineY)
+      const minX = -(areaRect.width / 2) + PADDING;
+      const maxX = (areaRect.width / 2) - btnRect.width - PADDING;
+
+      const maxY = 0; // baseline
+      const minY = -(areaRect.height - btnRect.height - PADDING); // up inside area
 
       return { minX, maxX, minY, maxY };
     }
 
-    function moveNoButtery(event) {
+    function updateYesGrowth() {
+      hoverCount += 1;
+      const yesScale = clamp(1 + hoverCount * YES_GROWTH_PER, 1, YES_MAX_SCALE);
+      yesBtn.style.transform = `translateX(-70px) scale(${yesScale})`;
+    }
+
+    function fleeFromCursor(mouseX, mouseY) {
       const now = Date.now();
       if (now - lastMove < COOLDOWN_MS) return;
       lastMove = now;
 
-      // YES grows each time NO dodges
-      hoverCount += 1;
-      const yesScale = clamp(1 + hoverCount * YES_GROWTH_PER, 1, YES_MAX_SCALE);
-      // Keep YES centered with its existing translateX
-      yesBtn.style.transform = `translateX(-70px) scale(${yesScale})`;
-
       const bounds = getBounds();
-
-      // Cursor position relative to buttonsArea center/baseline
-      const areaRect = buttonsArea.getBoundingClientRect();
-      const centerX = areaRect.left + areaRect.width / 2;
-
-      // Baseline Y is near the bottom where buttons sit
-      const baselineY = areaRect.bottom - 8; // matches bottom: 8px
-
-      const mouseX = event.clientX;
-      const mouseY = event.clientY;
-
-      // Button center in viewport (current)
       const btnRect = noBtn.getBoundingClientRect();
       const btnCenterX = btnRect.left + btnRect.width / 2;
       const btnCenterY = btnRect.top + btnRect.height / 2;
 
-      // Direction away from cursor (vector from cursor -> button)
-      let vx = btnCenterX - mouseX;
-      let vy = btnCenterY - mouseY;
+      const dx = btnCenterX - mouseX;
+      const dy = btnCenterY - mouseY;
+      const dist = Math.hypot(dx, dy);
 
-      // If cursor is exactly at center (rare), pick a direction
-      const len = Math.hypot(vx, vy) || 1;
-      vx /= len;
-      vy /= len;
+      // If cursor is not close, do nothing
+      if (dist > SAFE_RADIUS) return;
 
-      // Target shift: move away + add some jitter
-      const jitterX = (Math.random() * 2 - 1) * JITTER_PX;
-      const jitterY = (Math.random() * 2 - 1) * (JITTER_PX * 0.75);
+      // If close enough to trigger, count it as an "attempt" and grow YES
+      updateYesGrowth();
 
-      // Prefer staying within the "top half" for a fun dodge feel
-      const upwardBias = -Math.abs(Math.random() * 45);
+      // Direction away from cursor
+      const len = dist || 1;
+      const ux = dx / len;
+      const uy = dy / len;
 
-      // Convert direction into translate-space:
-      // x: away direction + jitter
-      // y: slight upward movement so it doesn't feel stuck on baseline
-      let targetX = noPos.x + vx * STEP_PX + jitterX;
-      let targetY = noPos.y + vy * (STEP_PX * 0.55) + jitterY + upwardBias;
+      // Stronger push when very close, weaker when farther
+      const strength = clamp((SAFE_RADIUS - dist) / SAFE_RADIUS, 0, 1);
 
-      // Soft push toward center to avoid hugging edges
-      const edgePullX = (targetX > 0 ? -1 : 1) * (1 - EDGE_SOFTNESS) * 18;
-      targetX += edgePullX;
+      // Target acceleration (add mild upward bias so it doesn't sit on baseline)
+      const ax = (ux * STEP_PX * (0.65 + strength)) + (Math.random() * 2 - 1) * JITTER_PX;
+      const ay = (uy * STEP_PX * (0.45 + strength)) + (Math.random() * 2 - 1) * (JITTER_PX * 0.7) - 22;
 
-      // Clamp to stay inside the buttonsArea
+      // Apply to velocity with damping (buttery)
+      vx = vx * (1 - DAMPING) + ax * DAMPING;
+      vy = vy * (1 - DAMPING) + ay * DAMPING;
+
+      // Update position
+      let targetX = noPos.x + vx;
+      let targetY = noPos.y + vy;
+
+      // Clamp inside area
       targetX = clamp(targetX, bounds.minX, bounds.maxX);
       targetY = clamp(targetY, bounds.minY, bounds.maxY);
 
       setNoTransform(targetX, targetY);
     }
 
-    // Smooth + slow: only trigger on hover. (No proximity spam = less clunk)
-    noBtn.addEventListener("mouseenter", moveNoButtery);
+    // Keep NO untouchable: move it as the cursor approaches anywhere in the play area
+    buttonsArea.addEventListener("mousemove", (e) => {
+      fleeFromCursor(e.clientX, e.clientY);
+    });
 
-    // If the window changes, pull NO back to a safe position
+    // Also move on direct enter (in case it starts under the cursor)
+    noBtn.addEventListener("mouseenter", (e) => {
+      fleeFromCursor(e.clientX, e.clientY);
+    });
+
+    // Safety reset on resize
     window.addEventListener("resize", () => {
       hoverCount = 0;
       yesBtn.style.transform = "translateX(-70px) scale(1)";
+      vx = 0; vy = 0;
       setNoTransform(20, 0);
     });
 
     // ---------------------------
     // HEART CONFETTI on YES
     // ---------------------------
-    function burstHearts(count = 80) {
+    function burstHearts(count = 90) {
       const hearts = ["💖", "💘", "💗", "💓", "💕", "❤️"];
       for (let i = 0; i < count; i++) {
         const el = document.createElement("div");
         el.className = "heart";
         el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
 
-        const x = Math.random() * 100;           // vw
-        const size = 14 + Math.random() * 22;    // px
-        const dur = 1900 + Math.random() * 1400; // ms
-        const delay = Math.random() * 140;       // ms
+        const x = Math.random() * 100;             // vw
+        const size = 14 + Math.random() * 22;      // px
+        const dur = 2000 + Math.random() * 1600;   // ms
+        const delay = Math.random() * 160;         // ms
 
         el.style.left = x + "vw";
         el.style.top = (-10 - Math.random() * 20) + "vh";
@@ -327,9 +328,8 @@
       }
     }
 
-    // YES shows confetti + overlay gif
     yesBtn.addEventListener("click", () => {
-      burstHearts(90);
+      burstHearts(110);
       overlay.style.display = "flex";
     });
 
